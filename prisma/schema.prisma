@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id              String    @id @default(uuid())
+  number          Int       @unique
+  observations    String
+  integrationType String
+  shop            String
+  orderReference  String
+  erpStatus       String
+  label           String?
+  transport       Transport @relation(fields: [transportId], references: [id])
+  client          Client    @relation(fields: [clientId], references: [id])
+  invoice         Invoice   @relation(fields: [invoiceId], references: [id])
+  items           Item[]
+  status          Status[]
+  alerts          Alert[]
+
+  clientId  String
+  invoiceId String
+
+  transportId String
+  @@map("orders")
+}
+
+model Client {
+  id         String @id @default(uuid())
+  internalId Int    @unique
+  name       String
+  cnpj       String
+  ie         String
+  rg         String
+  phone      String
+  cell       String
+  email      String
+
+  Order Order[]
+
+  @@map("clients")
+}
+
+model Invoice {
+  id           String  @id @default(uuid())
+  serie        Int
+  number       Int
+  issuanceDate String
+  value        String
+  accessKey    String  @unique
+  Order        Order[]
+
+  @@map("invoices")
+}
+
+model Item {
+  id      String @id @default(uuid())
+  sku     String
+  name    String
+  amount  Int
+  gtin    String
+  Order   Order  @relation(fields: [orderId], references: [id])
+  orderId String
+
+  @@map("items")
+}
+
+model Alert {
+  id      String   @id @default(uuid())
+  message String
+  addedAt DateTime @default(now())
+  Order   Order?   @relation(fields: [orderId], references: [id])
+  orderId String?
+}
+
+model Status {
+  id           String     @id @unique
+  status       StatusList
+  observations String
+  changedAt    DateTime
+
+  Order   Order?  @relation(fields: [orderId], references: [id])
+  orderId String?
+}
+
+enum StatusList {
+  PENDING
+  PAID
+  LABEL_ATTACHED
+  INVOICE_ATTACHED
+  WAITING_PROCCESS
+  IN_SEPARATION
+  IN_CONFERENCE
+  SENT
+  DELIVERED
+  CANCELLED
+  RETURNED
+
+}
+
+model Transport {
+  id         String @id @default(uuid())
+  shipping   String
+  recipient  String
+  address    String
+  number     String
+  complement String
+  city       String
+  district   String
+  cep        String
+  uf         String
+
+  Order Order[]
+  @@map("transports")
+}
