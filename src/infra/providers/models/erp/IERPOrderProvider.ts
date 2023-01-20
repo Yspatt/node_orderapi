@@ -1,14 +1,22 @@
 export interface OrderModel {
-    data: any
-    number: number
-    date: string
-    observations: string
-    integrationType: string
-    shop: string
-    orderReference: string
+    erpNumber: number
     erpStatus: string
+    shopNumber: string
+    shop: string
+    date: string
+
+    discounts: number
+    totalShipping: number
+    totalProducts: number
+    totalOrder: number
+
+    observations: string
+    internalObservations: string
+
+    integrationType: string
+
     client: {
-        id: number
+        id: string
         name: string
         cnpj: string
         ie: string
@@ -17,34 +25,20 @@ export interface OrderModel {
         cell: string
         email: string
     }
-    invoice: {
-        serie: number
-        number: number
-        issuanceDate: string
-        value: string
-        accessKey: string
-    }
+    invoiceAccessKey: string
+    invoiceNumber: number
+    invoiceSerie: number
     items: [
         {
             sku: string
             name: string
             amount: number
             gtin: string
+            unitValue: number
         }
     ]
-    transport: {
-        shipping: string
-        address: {
-            recipient: string
-            address: string
-            number: string
-            complement: string
-            city: string
-            district: string
-            cep: string
-            uf: string
-        }
-    }
+    transport: string
+    trackingCode: string
 }
 
 export interface IERPOrderProvider {

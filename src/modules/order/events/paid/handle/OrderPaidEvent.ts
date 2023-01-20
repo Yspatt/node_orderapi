@@ -1,4 +1,4 @@
-import { prisma } from '@infra/prisma/client'
+import prisma from '@infra/prisma/client'
 import { Order } from '@prisma/client'
 
 import { IOrderEvent } from '../../handler/IOrderEvent'

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { prisma } from '@infra/prisma/client'
+import prisma from '@infra/prisma/client'
 import { StatusList } from '@prisma/client'
 
 import {
@@ -47,11 +47,21 @@ export class GenerateOrderLabel implements IOrderEvent {
                 data: {
                     label: label,
                     status: {
-                        create: {
-                            id: order.number + StatusList.LABEL_ATTACHED,
-                            status: StatusList.LABEL_ATTACHED,
-                            observations: 'Order Attached Successfully',
-                            changedAt: new Date(),
+                        connectOrCreate: {
+                            where: {
+                                id: order.number + StatusList.LABEL_ATTACHED,
+                            },
+                            create: {
+                                id: order.number + StatusList.LABEL_ATTACHED,
+                                status: StatusList.LABEL_ATTACHED,
+                                observations: 'Order Attached Successfully',
+                                changedAt: new Date(),
+                            },
+                            conn: {
+                                status: StatusList.LABEL_ATTACHED,
+                                observations: 'Order Attached Successfully',
+                                changedAt: new Date(),
+                            },
                         },
                     },
                 },

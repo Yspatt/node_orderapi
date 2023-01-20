@@ -1,4 +1,4 @@
-import { prisma } from '@infra/prisma/client'
+import prisma from '@infra/prisma/client'
 import { Order, StatusList } from '@prisma/client'
 
 import { IOrderRepository } from '../IOrderRepository'
@@ -52,13 +52,13 @@ export class PrismaOrderRepository implements IOrderRepository {
                 status: {
                     connectOrCreate: {
                         create: {
-                            id: order.number + status,
+                            id: order.erpNumber + '_' + status,
                             status: status,
                             observations: observations ?? '',
                             changedAt: new Date(),
                         },
                         where: {
-                            id: order.number + status,
+                            id: order.erpNumber + '_' + status,
                         },
                     },
                 },

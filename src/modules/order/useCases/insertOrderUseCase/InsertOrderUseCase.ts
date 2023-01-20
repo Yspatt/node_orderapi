@@ -1,76 +1,79 @@
-import { prisma } from '@infra/prisma/client'
+import { injectable } from 'tsyringe'
+
+import prisma from '@infra/prisma/client'
 import { OrderModel } from '@infra/providers/models/erp/IERPOrderProvider'
+import { CreateClientUseCase } from '@modules/client/useCases/createClient/CreateClientUseCase'
+import { GetClientUseCase } from '@modules/client/useCases/getClient/GetClientUseCase'
 import { Order, StatusList } from '@prisma/client'
 
 import { ProcessOrderUseCase } from '../processOrderUseCase/ProcessOrderUseCase'
 
+@injectable()
 export class InsertOrderUseCase {
-    constructor(private processOrderUseCase: ProcessOrderUseCase) {}
+    constructor(
+        private processOrderUseCase: ProcessOrderUseCase,
+        private getClient: GetClientUseCase,
+        private createClient: CreateClientUseCase
+    ) {}
 
     async execute(model: OrderModel): Promise<Order> {
         const data = await model
 
+        let client = await this.getClient.execute({
+            id: data.client.id,
+        })
+
+        if (!client) {
+            client = await this.createClient.execute({
+                cell: data.client.cell,
+                cnpj: data.client.cnpj,
+                email: data.client.email,
+                id: data.client.id,
+                ie: data.client.ie,
+                name: data.client.name,
+                phone: data.client.phone,
+                rg: data.client.rg,
+            })
+        }
+
         const upsert = await prisma.order.upsert({
             where: {
-                number: data.number,
+                erpNumber: data.erpNumber,
             },
             create: {
+                erpNumber: data.erpNumber,
                 erpStatus: data.erpStatus,
-                integrationType: data.integrationType,
-                number: data.number,
-                observations: data.observations,
-                orderReference: data.orderReference,
+                shopNumber: data.shopNumber,
                 shop: data.shop,
+                date: data.date,
+                discounts: data.discounts,
+                totalShipping: data.totalShipping,
+                totalProducts: data.totalProducts,
+                totalOrder: data.totalOrder,
+                observations: data.observations,
+                internalObservations: data.internalObservations,
+
+                integrationType: data.integrationType,
+
                 client: {
-                    connectOrCreate: {
+                    connect: {
                         where: {
                             internalId: data.client.id,
                         },
-                        create: {
-                            internalId: data.client.id,
-                            cell: data.client.cell,
-                            cnpj: data.client.cnpj,
-                            email: data.client.email,
-                            ie: data.client.ie,
-                            name: data.client.name,
-                            phone: data.client.phone,
-                            rg: data.client.rg,
-                        },
                     },
                 },
-                invoice: {
-                    connectOrCreate: {
-                        create: {
-                            accessKey: data.invoice.accessKey,
-                            issuanceDate: data.invoice.issuanceDate,
-                            number: data.invoice.number,
-                            serie: data.invoice.serie,
-                            value: data.invoice.value,
-                        },
-                        where: {
-                            accessKey: data.invoice.accessKey,
-                        },
-                    },
-                },
-                transport: {
-                    create: {
-                        address: data.transport.address.address,
-                        cep: data.transport.address.cep,
-                        city: data.transport.address.city,
-                        complement: data.transport.address.complement,
-                        district: data.transport.address.district,
-                        number: data.transport.address.number,
-                        recipient: data.transport.address.recipient,
-                        uf: data.transport.address.uf,
-                        shipping: data.transport.shipping,
-                    },
-                },
+                invoiceAccessKey: data.invoiceAccessKey,
+                invoiceNumber: data.invoiceNumber,
+                invoiceSerie: data.invoiceSerie,
+                transport: data.transport,
+                trackingCode: data.trackingCode,
+
                 items: {
                     create: data.items,
                 },
                 status: {
                     create: {
-                        id: data.number + StatusList.PENDING,
+                        id: data.erpNumber + '_' + StatusList.PENDING,
                         status: StatusList.PENDING,
                         observations: '',
                         changedAt: new Date(),
@@ -80,10 +83,8 @@ export class InsertOrderUseCase {
             update: {
                 erpStatus: data.erpStatus,
                 integrationType: data.integrationType,
-                number: data.number,
                 observations: data.observations,
-                orderReference: data.orderReference,
-                shop: data.shop,
+                internalObservations: data.internalObservations,
             },
         })
         console.log('sucess')

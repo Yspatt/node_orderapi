@@ -11,12 +11,34 @@ export type ClientSearchResult = {
     totalCount: number
 }
 
+export type ClientCreateParams = {
+    id: string
+    name: string
+    cnpj: string
+    ie: string
+    rg: string
+    phone: string
+    cell: string
+    email: string
+}
+
 export interface IClientReposity {
     search({
         query,
         page,
         perPage,
     }: ClientSearchParams): Promise<ClientSearchResult>
+
+    createClient({
+        cell,
+        cnpj,
+        email,
+        id,
+        ie,
+        name,
+        phone,
+        rg,
+    }: ClientCreateParams): Promise<Client>
     getClientById(id: string): Promise<Client>
     getClientByName(name: string): Promise<Client[]>
     getClientByCnpj(cnpj: string): Promise<Client>
